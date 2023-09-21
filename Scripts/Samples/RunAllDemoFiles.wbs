@@ -1,0 +1,130 @@
+'
+'    RunAllDemoFiles.WBS (Working Model and InteractivePhysics)
+'
+'    Written by Tim Loduha,
+'    Updated by Michael Woo, October 11th, 2001
+'    Copyright (c) 2006 Design Simulation Technologies, Inc.
+'    Portions Copyright (c) 2001-2005 MSC.Software Corporation
+'
+
+Sub LaunchRun(ByVal aDoc as String)
+'-------------------------------------------------------------
+' Launch one simulation
+'-------------------------------------------------------------
+
+   Dim MyDoc as WMDocument
+
+   If GetAttr(aDoc) <> ebNormal then
+      SetAttr aDoc, ebNormal
+   End If
+   Set MyDoc = WM.Open(aDoc)
+   If MyDoc Is Nothing then Exit Sub
+   If MyDoc.PauseControlCount = 0 then
+      MyDoc.Run 200
+   ElseIf MyDoc.GetPauseControlType(1) <> "loop" then
+      MyDoc.Run
+   Else
+      MyDoc.SetPauseControlType 1, "pause"
+      MyDoc.Run
+      MyDoc.SetPauseControlType 1, "loop"
+      MyDoc.Reset
+      MyDoc.Save
+   End If
+   MyDoc.Close
+
+End Sub
+
+
+Sub LaunchRuns(ByVal aPath as String)
+'-------------------------------------------------------------
+' Run simulations
+'-------------------------------------------------------------
+
+   Dim separator as String    'Path separator, either : or \
+   Dim fNames() as String     'Array of strings of file names
+   Dim dNames() as String     'Array of strings of directory names
+   Dim namei    as String
+
+
+   'Set the current directory to the path
+   ChDir(aPath)
+
+   'List of files in current directory               
+   If basic.os = ebWin16 or basic.os = ebWin32 then	'Check whether it is Windows or Mac
+      FileList fNames,"*.*" 
+      If( ArrayDims(fNames)>0 ) Then  
+         For i = LBound(fNames) to Ubound(fNames)
+            namei = fNames(i)
+            If(FileParse$(namei,5) = "wm" or FileParse$(namei,5) = "wm2d" or FileParse$(namei,5) = "ip") then 	'Must be .wm or .wm2d or .ip extension
+               LaunchRun namei      
+            End If
+         Next i
+      End If
+      separator = Basic.PathSeparator$
+      FileDirs dNames, "???*"    'Avoid . and .. directories (>=3 char directory names)
+      If( ArrayDims(dNames)>0 ) Then  
+         For i = LBound(dNames) to UBound(dNames)
+            namei = dNames(i)
+            LaunchRuns (aPath+separator+namei)
+         Next i
+      End If
+    else						'For Mac computers
+      FileList fNames
+      If( ArrayDims(fNames)>0 ) Then 
+         For i = LBound(fNames) to Ubound(fNames)
+           namei = fNames(i)
+           LaunchRun namei
+         Next i
+      End If
+      separator = Basic.PathSeparator$
+      FileDirs dNames
+      If( ArrayDims(dNames)>0 ) Then  
+         For i = LBound(dNames) to UBound(dNames)
+            namei = dNames(i)
+            LaunchRuns (aPath+separator+namei)
+         Next i
+      End If
+      
+   End if 
+End Sub
+
+
+'----------------Main()---------------------------------------
+
+Sub Main()
+
+   'Original Directory when script was launched.'
+   Dim originalDirectory as String
+
+   'Go to the correct DemoFiles directory
+   if basic.os = ebWin16 or basic.os = ebWin32 then
+      wmdirectory = wm.StartupDirectory
+	chDrive(wm.StartupDirectory)
+      chDir(wmdirectory)
+      chDir("..")
+      chDir("DemoFiles")
+   else
+      wmdirectory = CurDir$
+      chDir(wmdirectory)
+      chDir("DemoFiles")
+   end if
+
+
+   'Save current directory
+   originalDirectory = CurDir$
+
+   'Start Opening and Running the simulations'
+      LaunchRuns(originalDirectory)
+
+   'Uncomment next three lines to have RunAllDemoFiles repeat
+   'For runCounter = 1 to 10000
+   '   LaunchRuns(originalDirectory)
+   'Next runCounter
+
+   'resets the original directory
+   ChDir(originalDirectory)
+
+   'Closes all open files (e.g, resultsFile)
+   Close           
+          
+End Sub

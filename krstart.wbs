@@ -1,0 +1,67 @@
+Option Compare Text ' This makes string comparisons case-insensitive.
+
+Sub Main()
+
+   dim wmdirectory as string, sep as string
+   dim currentdirectory as string
+   currentdirectory = CurDir$
+
+   if basic.os = ebWin16 or basic.os = ebWin32 then
+      wmdirectory = wm.StartupDirectory
+   else
+      wmdirectory = CurDir$
+   end if
+   ChDrive(wmdirectory)
+   ChDir(wmdirectory)
+	
+   sep = Basic.PathSeparator$		' Stores the appropriate path separator for this platform
+
+            
+   ' Define all the files with a wbs extension inside the scripts directory/folder
+   If (Dir$("Scripts", ebDirectory) = "Scripts") THEN	' The directory/folder SCRIPTS exists
+      Dim f(20) as string, fullname as string, scriptdir as string
+      scriptdir = wmdirectory + sep + "Scripts" 
+      ChDir(scriptdir)					'Set to the SCRIPT directory
+      f(1) = Dir$("*.wbs")				' Find the first file with a .wbs extension
+      i% = 1
+      While (f(i) <> "") And (i < 20)			'Define the first 20 scripts found
+         fullname = scriptdir + sep + f(i)
+         WM.InsertMenuItem i, f(i), fullname
+         i = i+1
+         f(i) = Dir$					' Get next file with a .wbs extension
+      Wend
+   End If
+	
+
+   ' Demo scripts
+   Dim krscripts as string
+   krscripts = scriptdir + sep + "Samples"
+
+	
+   'Returns to original directory
+   ChDir(CurDir$)
+   If (Dir$("Samples",ebDirectory) = "Samples") then		' The directory/folder Samples exists
+      WM.InsertMenuItem 1,"Create Constraint", krscripts + sep + "bldcons.wbs"
+      WM.InsertMenuItem 2,"Document Model", krscripts + sep + "docinfo.wbs"
+      WM.InsertMenuItem 3,"Zoom to Extent", krscripts + sep + "krzoom.wbs"
+      WM.InsertMenuItem 4,"Measure Between Points", krscripts + sep + "measure.wbs"
+      WM.InsertMenuItem 5,"Flip Polygon", krscripts + sep + "flipoly.wbs"
+	WM.InsertMenuItem 6,"&Negate Velocity", krscripts + sep + "NegateVelocity.wbs"
+      WM.InsertMenuItem 7,"Run All Demo Files", krscripts + sep + "RunAllDemoFiles.wbs"
+      WM.InsertMenuItem 8,"Run All Demo Files with Repeat", krscripts + sep + "RunAllDemoFilesWithRepeat.wbs"
+      WM.InsertMenuItem 9,"Run Physics Experiments", krscripts + sep + "RunPhysicsExperiments.wbs"
+
+   end If	
+
+   ' Run the User startup file
+   dim userstartup as string
+   userstartup = wmdirectory + sep + "startup.wbs"
+   If FileExists(userstartup) then
+      wm.RunScript userstartup
+   end If
+   ChDir(currentdirectory)
+   If basic.os = ebWin16 or basic.os = ebWin32 then	
+      ChDrive(currentdirectory)
+   End if
+
+End Sub

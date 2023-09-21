@@ -1,0 +1,126 @@
+' ******************************************************************************
+' NegateVelocity.wbs - Negates x, y, rotational velocity of bodies in 
+'                      in the document
+' Created by Michael Woo 2002.08.07
+'    Copyright (c) 2006 Design Simulation Technologies, Inc.
+'    Portions Copyright (c) 2001-2005 MSC.Software Corporation
+' ******************************************************************************
+
+'Declares CurrentDocument
+Dim CurrentDocument as WMDocument
+
+'******************************************
+'Defined String Constants
+Const AnswerBoxQuestion = "Which bodies' velocity do you want to negate?"
+Const ButtonAllBodies = "All bodies"
+Const ButtonSelectedBodies = "Selected bodies"
+Const ButtonCancel = "Cancel"
+Const MsgBoxNegateAll = "Negate All bodies' velocity"
+Const MsgBoxNegateSelected = "Negate selected bodies' velocity"
+Const MsgBoxNoBodyInDoc = "There are no bodies in this document."
+Const MsgBoxNoBodySelected = "You have not selected any body."
+Const MsgBoxUpdatedFront = "Updated the velocity properties of "
+Const MsgBoxUpdatedEnd = " bodies"
+
+'******************************************
+Sub NegateVelocityOfAllBodies(temp as integer)
+'--------------------------------------------------------------------------------
+' Checks whether there are any bodies in the document. If yes, it negates the 
+' velocity of all bodies
+'--------------------------------------------------------------------------------
+
+   Dim Body1 as WMBody
+   Dim i as integer
+'  MsgBox(MsgBoxNegateAll)
+
+   If CurrentDocument.bodies.count = 0 then
+      MsgBox(MsgBoxNoBodyInDoc)
+      Exit Sub
+   Else
+      For i = 1 to CurrentDocument.bodies.count
+         Set Body1 = CurrentDocument.Body(CurrentDocument.Bodies.Item(i).id)
+         Body1.VX.Value = -1 * Body1.VX.Value
+         Body1.VY.Value = -1 * Body1.VY.Value
+         Body1.VR.Value = -1 * Body1.VR.Value
+      Next i
+   End If
+   MsgBox(MsgBoxUpdatedFront & CurrentDocument.bodies.count & MsgBoxUpdatedEnd)
+End Sub
+
+'******************************************
+Sub NegateVelocityOfSelectedBodies(temp as integer)
+'--------------------------------------------------------------------------------
+' Checks whether at least 1 body is selected. If yes, it negates the 
+' velocity of the selected bodies
+'--------------------------------------------------------------------------------
+
+   Dim Body1 as WMBody
+   Dim i as integer
+   Dim numberOfBodies as integer
+'  MsgBox(MsgBoxNegateSelected)
+
+   numberOfBodies = 0
+
+   If CurrentDocument.selection.count = 0 then
+      MsgBox(MsgBoxNoBodySelected)
+      Exit Sub
+   Else
+      For i = 1 to CurrentDocument.selection.count
+         If CurrentDocument.selection.item(i).kind = "body" then
+            numberOfBodies = numberOfBodies + 1
+            Set Body1 = CurrentDocument.Body(CurrentDocument.selection.Item(i).id)
+            Body1.VX.Value = -1 * Body1.VX.Value
+            Body1.VY.Value = -1 * Body1.VY.Value
+            Body1.VR.Value = -1 * Body1.VR.Value
+         End if
+      Next i
+   End If
+   MsgBox(MsgBoxUpdatedFront & numberOfBodies & MsgBoxUpdatedEnd)
+End Sub
+
+'******************************************
+Sub NegateVelocity(WhichBodiesToNegate as string)
+'--------------------------------------------------------------------------------
+' Acts based on the user's selection and passes to correct function or exits 
+' the script
+'--------------------------------------------------------------------------------
+
+   If WhichBodiesToNegate = ButtonAllBodies then
+      NegateVelocityOfAllBodies(1)
+   Elseif WhichBodiesToNegate = ButtonSelectedBodies then
+      NegateVelocityOfSelectedBodies(1)
+   Elseif WhichBodiesToNegate = ButtonCancel then
+      Exit Sub
+   End if
+      
+End Sub
+
+'******************************************
+Function WhichBodies as string
+'--------------------------------------------------------------------------------
+' This function asks whether the user wants to negate the values of the 
+' selected bodies or all bodies in the document
+'--------------------------------------------------------------------------------
+
+   r%=answerbox(AnswerBoxQuestion,ButtonAllBodies,ButtonSelectedBodies,ButtonCancel)
+
+   Select Case R
+      Case 1
+         WhichBodies = ButtonAllBodies
+      Case 2
+         WhichBodies = ButtonSelectedBodies
+      Case 3
+         WhichBodies = ButtonCancel
+   End Select
+
+End Function
+
+'******************************************
+Sub Main()
+'--------------------------------------------------------------------------------
+' Main routine
+'--------------------------------------------------------------------------------
+   Set CurrentDocument = WM.ActiveDocument
+   NegateVelocity(WhichBodies)
+
+End Sub
